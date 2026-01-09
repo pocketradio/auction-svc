@@ -1,8 +1,7 @@
 "use client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
-
+import { z } from "zod";
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -22,7 +21,8 @@ import {
 } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { useRouter } from "next/navigation"
-import { toast } from "sonner"
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 // zod schema 
 
@@ -43,6 +43,7 @@ const formSchema = z
 
 export default function Create() {
     const router = useRouter();
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -52,19 +53,20 @@ export default function Create() {
             desc: ""
         },
     })
+    const { isSubmitting } = form.formState;
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        const payload = {
+        const payload = { // payload matching zodauctionchema in backend
             title: values.title,
-            desc: values.desc,
-            startingPrice: Number(values.startingPrice),
-            endTime: values.endTime,
+            description: values.desc,
+            startingBid: Number(values.startingPrice),
+            endsAt: new Date(values.endTime).toISOString()
         }
 
         console.log(payload)
 
-
-        const res = await fetch("http://localhost:5000/auction/create", {
+        console.log('fetching...')
+        const res = await fetch("http://localhost:5000/auctions/create", {
             // body, header etc.
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -73,21 +75,14 @@ export default function Create() {
         })
 
         if (res.ok) {
-            toast("Added auction successfully. Redirecting to auctions page...", {
-                action: {
-                    label: "Ok",
-                    onClick: () => { },
-                },
-            })
-
-            setTimeout(() => {
-                router.push("/auctions")
-            }, 2000);
-
+            console.log("SUCCESS");
+            toast.success("Added auction successfully!"); // Using .success adds a green icon automatically
+            router.push("/auctions");
             return;
         }
 
         // else 
+        console.log("unsuccessful");
         toast("Failed to add auction. Please try again. ", {
             action: {
                 label: "Ok",
@@ -100,6 +95,7 @@ export default function Create() {
     return (
 
         <div className="flex min-h-screen items-center justify-center">
+            <Toaster />
             <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle>Create Auction</CardTitle>
@@ -170,7 +166,13 @@ export default function Create() {
                                 )}
                             />
 
-                            <Button type="submit" className="w-full"> Submit </Button>
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? "Submitting..." : "Submit"}
+                            </Button>
                         </form>
                     </Form>
                 </CardContent>
