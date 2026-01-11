@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import { createAuction, createBid, getAllAuctions, getAuction } from "../services/auction.service.js";
 import passport from "passport";
 import type { AuthUser } from "../middleware/validateLogin.js";
+import { pub } from "../queue/client.js";
 const auctionRouter = Router();
 
 auctionRouter.get("/", async (req, res) => { // list of auctions
@@ -48,9 +49,21 @@ auctionRouter.post("/create", async (req: Request, res: Response) => {
 auctionRouter.post("/:id/bid", passport.authenticate("jwt", { session: false }) // if invalid, passport auto sends 401 to client
     , async (req: Request, res: Response) => {
         const { id, email } = req.user as AuthUser;
+        const auctionId = Number(req.params.id);
         const { amount } = req.body as { amount: number };
 
-        // queue logic
+        await pub.send(
+            { exchange: 'bid', routingKey: 'bid.created', },
+            {
+                auctionId,
+                id,
+                email,
+                amount,
+                timestamp: Date.now()
+            }
+        );
+
+        res.sendStatus(202);
     })
 
 export { auctionRouter };
