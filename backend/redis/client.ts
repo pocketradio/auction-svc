@@ -1,7 +1,11 @@
 import { createClient } from "redis";
+import fs from 'fs';
 
 export const client = createClient({
     url: process.env.REDIS_URL as string
 });
 
 await client.connect();
+
+export const luascript = fs.readFileSync("./scripts/bid.lua", 'utf-8');
+export const sha1 = await client.scriptLoad(luascript);
