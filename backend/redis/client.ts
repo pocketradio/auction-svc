@@ -7,5 +7,5 @@ export const client = createClient({
 
 await client.connect();
 
-export const luascript = fs.readFileSync("./scripts/bid.lua", 'utf-8');
+export const luascript = fs.readFileSync(new URL("./scripts/bid.lua", import.meta.url)) //
 export const sha1 = await client.scriptLoad(luascript);
