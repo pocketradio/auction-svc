@@ -1,6 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Logout() {
     const router = useRouter();
@@ -8,9 +9,16 @@ export default function Logout() {
         <div className="hover:bg-accent/50 p-2 rounded-md inline-flex ml-auto">
             <button
                 onClick={async () => {
-                    const response = await fetch("http://localhost:5000/logout")
+                    const response = await fetch("http://localhost:5000/logout", {
+                        credentials: "include",
+                    })
                     if (response.ok) {
-                        router.push("/login");
+                        setTimeout(() => {
+                            router.push("/login");
+                        }, 1500);
+                        toast.success("Logging out...", {
+                            richColors: true
+                        })
                     }
                 }}
                 className="cursor-pointer"
