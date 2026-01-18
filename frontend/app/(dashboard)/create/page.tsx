@@ -25,7 +25,6 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 
 // zod schema 
-
 const formSchema = z
     .object({
         title: z.string().min(3, "Title too short"),
@@ -63,9 +62,6 @@ export default function Create() {
             endsAt: new Date(values.endTime).toISOString()
         }
 
-        console.log(payload)
-
-        console.log('fetching...')
         const res = await fetch("http://localhost:5000/auctions/create", {
             // body, header etc.
             method: "POST",
@@ -76,13 +72,12 @@ export default function Create() {
 
         if (res.ok) {
             console.log("SUCCESS");
-            toast.success("Added auction successfully!"); // Using .success adds a green icon automatically
+            toast.success("Added auction successfully!");
             router.push("/auctions");
             return;
         }
 
         // else 
-        console.log("unsuccessful");
         toast("Failed to add auction. Please try again. ", {
             action: {
                 label: "Ok",
