@@ -1,8 +1,28 @@
+import { LoginForm } from "@/components/login-form";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card"
+
+
 export default function Login() {
     return (
-        <div className="min-h-screen bg-black text-red-200">
-            <h1>Hii</h1>
-        </div>
+        <div className="flex min-h-screen items-center justify-center bg-black">
+            <Card className="w-100">
+                <CardHeader>
+                    <CardTitle>Login</CardTitle>
+                    <CardDescription>
+                        Enter your credentials to continue
+                    </CardDescription>
+                </CardHeader>
 
+                <CardContent>
+                    <LoginForm />
+                </CardContent>
+            </Card>
+        </div>
     )
 }
