@@ -1,7 +1,7 @@
 "use client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { includes, z } from "zod"
+import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -14,6 +14,8 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 
 const formSchema = z.object({
@@ -29,6 +31,8 @@ const formSchema = z.object({
 
 export function LoginForm() {
 
+    const router = useRouter();
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -38,9 +42,9 @@ export function LoginForm() {
         },
     })
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onSubmit(values: z.infer<typeof formSchema>) {
 
-        fetch("http://localhost:5000/login", {
+        const result = await fetch("http://localhost:5000/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -52,6 +56,19 @@ export function LoginForm() {
             })
         }) // gets the JWT token back
 
+        if (!result.ok) {
+            toast.success("Failed to login!", {
+                richColors: true,
+            })
+            return;
+        }
+
+        toast.success("Logging you in...", {
+            richColors: true,
+        })
+        router.push("/dashboard");
+
+
         console.log(values)
     }
 
@@ -59,22 +76,6 @@ export function LoginForm() {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                                <Input placeholder="shadcn" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                                This is your public display name.
-                            </FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
 
                 <FormField
                     control={form.control}
