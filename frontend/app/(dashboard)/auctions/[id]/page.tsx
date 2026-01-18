@@ -77,20 +77,32 @@ export default function AuctionPage() {
         if (userId === -1) { return }
         const sse: EventSource = new EventSource(`http://localhost:5000/streams/${auctionId}`)
 
-        sse.addEventListener("bid_success", (e) => {
+        sse.addEventListener("BID_CREATED", (e) => {
             const data = JSON.parse(e.data);
+
+            if (data.userId === userId) {
+                toast.success("Successfully placed a bid!", {
+                    richColors: true
+                })
+            }
+            else {
+                toast.warning(`A bid of ${data.amount} was placed!`, {
+                    richColors: true
+                });
+            }
+
             setAuction(prev => {
                 if (prev === null) return null;
                 return {
                     ...prev,
                     winner: data.winner,
                     winnerId: data.winnerId,
-                    currentBid: data.currentBid
+                    currentBid: data.amount
                 }
             })
         })
 
-        sse.addEventListener("auction_closed", (e) => {
+        sse.addEventListener("AUCTION_CLOSED", (e) => {
             const data = JSON.parse(e.data);
             setOpen(false);
             setAuction(prev => {
@@ -103,6 +115,17 @@ export default function AuctionPage() {
                 };
             });
         })
+
+
+        sse.addEventListener("BID_REJECTED", (e) => {
+            const data = JSON.parse(e.data);
+            if (data.userId === userId) {
+                toast.error("Bid too low! Someone placed a higher bid just before you.", {
+                    richColors: true
+                })
+            }
+        })
+
 
         return () => {
             sse.close();
@@ -129,9 +152,16 @@ export default function AuctionPage() {
         bid > Number(auction.currentBid)
 
     const submitBid: SubmitHandler<{ bid: number }> = async (values) => {
-        if (!auction) return
+        if (userId === auction?.ownerId) {
+            toast.error("You cannot bid in your own auction!", {
+                richColors: true
+            });
+            return;
+        }
 
-        if (values.bid <= Number(auction.currentBid)) {
+        console.log("user id : ", userId);
+        console.log("owner id : ", auction?.ownerId);
+        if (values.bid <= Number(auction?.currentBid)) {
             toast.error("Bid too low")
             return
         }
@@ -142,19 +172,19 @@ export default function AuctionPage() {
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
                 body: JSON.stringify({ amount: values.bid }),
-            }).then((response) => response.json())
-                .then((res) => {
-                    if (res.success === true) {
-                        toast.success("Placed bid!", {
-                            richColors: true
-                        })
-                    }
-                    else {
-                        toast.warning("You've been outbid", {
-                            richColors: true
-                        })
-                    }
-                })
+            }).then((response) => {
+                if (!response.ok) {
+                    toast.error("Failed to reach server!", {
+                        richColors: true
+                    })
+                }
+                else {
+                    toast.info("Attempting to place bid...", {
+                        duration: 1000,
+                        richColors: true
+                    })
+                }
+            })
 
             setOpen(false);
         }

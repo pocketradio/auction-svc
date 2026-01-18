@@ -65,32 +65,32 @@ export default function Lobby() {
         if (userId === -1) { return; }
         const sse: EventSource = new EventSource("http://localhost:5000/streams/lobby")
 
-        sse.addEventListener("auction_created", (e) => {
+        sse.addEventListener("AUCTION_CREATED", (e) => {
             try {
                 const parsedData = JSON.parse(e.data)
-                setAuctions(previousAuction => [
-                    ...previousAuction,
-                    ...parsedData.auctions,
-                ])
-            } catch (e) {
+                console.log("THE AUCTION CREATE DATA : ", parsedData, "\n\n");
+                setAuctions(previousAuction => {
+                    const isDup = previousAuction.some(auction => auction.id === parsedData.id)
+
+                    if (isDup) { return previousAuction }
+                    return [parsedData, ...previousAuction];
+                })
+            }
+
+            catch (e) {
                 console.error(e)
             }
         })
 
-        sse.addEventListener("bid_success", (e) => {
-            try {
-                const parsedData = JSON.parse(e.data)
-                //only bidder sees toast
-                if (parsedData.userId === userId) {
-                    toast.success("Successfully placed bid", {
-                        richColors: true,
-                    })
-                }
 
+        sse.addEventListener("BID_CREATED", (e) => {
+            try {
+                const parsedData = JSON.parse(e.data);
+                console.log("\n\nHIII, ", parsedData);
                 setAuctions(prev =>
                     prev.map(x =>
                         x.id === parsedData.auctionId
-                            ? { ...x, currentBid: parsedData.currentBid }
+                            ? { ...x, currentBid: parsedData.amount }
                             : x
                     )
                 )
@@ -99,7 +99,7 @@ export default function Lobby() {
             }
         })
 
-        sse.addEventListener("auction_closed", (e) => {
+        sse.addEventListener("AUCTION_CLOSED", (e) => {
             try {
                 const parsedData = JSON.parse(e.data)
                 setAuctions(prev =>
